@@ -6,6 +6,7 @@
 /temp
 .pnp.js
 /.vscode
+/src/DATA.ZIP
 
 # testing
 /coverage
