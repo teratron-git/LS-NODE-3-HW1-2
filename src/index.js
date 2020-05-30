@@ -27,15 +27,15 @@ let len;
 function createFolder(path) {
 	fs.access(path, err => {
 		if (!err) {
-			console.log('OK')
+			console.log(`Папка ${path} уже создана ранее!`)
 		} else {
-			console.log('!!!err', err)
+			// console.log('!!!err', err)
 			fs.mkdir(path, err => {
 				if (err) {
-					console.error(err)
+					// console.error(err)
 					return
 				}
-				console.log('Папка создана')
+				console.log(`Папка ${path} создана`)
 			})
 		}
 	});
