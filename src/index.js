@@ -40,7 +40,7 @@ function createFolder(path) {
 		}
 	});
 }
-
+let count = 0;
 function readFolder(src) {
 	fs.readdir(src, (err, files) => {
 		if (err) {
@@ -48,6 +48,7 @@ function readFolder(src) {
 			process.exit(1)
 		}
 		len = files.length
+
 		files.map(file => {
 			let currentFile = path.join(src, file)
 
@@ -60,8 +61,32 @@ function readFolder(src) {
 
 					readFolder(path.join(src, file))
 				} else {
+
+					let rename = () => {
+						fs.rename(path.join(src, file), path.join(dest, file[0].toUpperCase(), file), (err) => {
+							if (err) {
+								console.error(err)
+								return
+							}
+							//готово
+						})
+					}
+					rename();
+
 					console.log('ФАЙЛ', file)
 					createFolder(path.join(dest, file[0].toUpperCase()))
+
+					// setTimeout(() => {
+					// 	console.log('-------------------------')
+					// 	 fs.rmdir(src)
+					// }, 2000)
+
+					count++;
+					console.log('count++', count, len)
+					if (len === 0) {
+						console.log(`--- ${count} файлов!---`)
+						count = 0;
+					}
 				}
 			})
 
@@ -69,6 +94,7 @@ function readFolder(src) {
 		})
 	})
 	// createFolder(dest);
+
 }
 
 createFolder(dest)
@@ -86,12 +112,13 @@ readFolder(src)
 
 
 
-// const interval = setInterval(() => {
-// 	if (len === 0) {
-// 		console.log(data)
-// 		clearInterval(interval)
-// 	}
-// }, 100)
+const interval = setInterval(() => {
+	if (len !== 0) {
+		console.log(data)
+		// fs.rmdir(src)
+		clearInterval(interval)
+	}
+}, 1000)
 
 
 
