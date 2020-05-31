@@ -59,10 +59,14 @@ function readFolder(src) {
             );
           };
           let copy = () => {
-            fs.copyFile(path.join(src, file), path.join(dest, file[0].toUpperCase(), file), (err) => {
-              if (err) console.error(err)
-            });
-          }
+            fs.copyFile(
+              path.join(src, file),
+              path.join(dest, file[0].toUpperCase(), file),
+              (err) => {
+                if (err) console.error(err);
+              }
+            );
+          };
           createFolder(path.join(dest, file[0].toUpperCase()));
           isDeleteNeeded ? rename() : copy();
         }
