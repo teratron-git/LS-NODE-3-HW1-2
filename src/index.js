@@ -1,133 +1,85 @@
-const fs = require('fs')
-const path = require('path')
+const fs = require('fs');
+const path = require('path');
+const del = require('del');
 
-let src = path.join(__dirname, 'DATA');
-let dest = path.join(__dirname, 'SORTED');
-console.log('src', src)
-console.log('dest', dest)
+let src = path.join(__dirname, process.argv[2] || 'DATA');
+let dest = path.join(__dirname, process.argv[3] || 'SORTED');
+let isDeleteNeeded = process.argv[4] || false;
+let countDir = 0;
+let data = [];
+
+console.log('Исходная папка:', src);
+console.log('Конечная папка:', dest);
+console.log('Удалить исходную папку после сортировки :', isDeleteNeeded, '\n');
 
 let isFile = (currentFile, cb) => {
-	let isCurrentFile;
-	fs.stat(currentFile, (err, stats) => {
-		if (err) {
-			console.error('!ОШИБКА', err)
-			cb(err, null)
-			return
-		} else {
-			isCurrentFile = stats.isFile()
-			cb(err, isCurrentFile)
-		}
-	})
-	return isCurrentFile;
-}
-
-let data = []
-let len;
+  let isCurrentFile;
+  fs.stat(currentFile, (err, stats) => {
+    if (err) {
+      console.error('!ОШИБКА', err);
+      cb(err, null);
+    } else {
+      isCurrentFile = stats.isFile();
+      cb(err, isCurrentFile);
+    }
+  });
+};
 
 function createFolder(path) {
-	fs.access(path, err => {
-		if (!err) {
-			console.log(`Папка ${path} уже создана ранее!`)
-		} else {
-			// console.log('!!!err', err)
-			fs.mkdir(path, err => {
-				if (err) {
-					// console.error(err)
-					return
-				}
-				console.log(`Папка ${path} создана`)
-			})
-		}
-	});
+  if (!fs.existsSync(path)) {
+    fs.mkdirSync(path);
+  }
 }
-let count = 0;
+
 function readFolder(src) {
-	fs.readdir(src, (err, files) => {
-		if (err) {
-			console.log(err)
-			process.exit(1)
-		}
-		len = files.length
-
-		files.map(file => {
-			let currentFile = path.join(src, file)
-
-			isFile(currentFile, (err, isCurrentFile) => {
-				if (err) console.log(err);
-				data.push({ file, isCurrentFile })
-				len--
-				if (!isCurrentFile) {
-					console.log('ПАПКА', file)
-
-					readFolder(path.join(src, file))
-				} else {
-
-					let rename = () => {
-						fs.rename(path.join(src, file), path.join(dest, file[0].toUpperCase(), file), (err) => {
-							if (err) {
-								console.error(err)
-								return
-							}
-							//готово
-						})
-					}
-					rename();
-
-					console.log('ФАЙЛ', file)
-					createFolder(path.join(dest, file[0].toUpperCase()))
-
-					// setTimeout(() => {
-					// 	console.log('-------------------------')
-					// 	 fs.rmdir(src)
-					// }, 2000)
-
-					count++;
-					console.log('count++', count, len)
-					if (len === 0) {
-						console.log(`--- ${count} файлов!---`)
-						count = 0;
-					}
-				}
-			})
-
-			// console.log(`${currentFile} - ${isCurrentFile}`)
-		})
-	})
-	// createFolder(dest);
-
+  let len = 0;
+  countDir++;
+  fs.readdir(src, (err, files) => {
+    if (err) {
+      console.log(err);
+      process.exit(1);
+    }
+    len = files.length;
+    files.map((file) => {
+      let currentFile = path.join(src, file);
+      isFile(currentFile, (err, isCurrentFile) => {
+        if (err) console.log(err);
+        data.push({ file, isCurrentFile });
+        len--;
+        if (!isCurrentFile) {
+          readFolder(path.join(src, file));
+        } else {
+          let rename = () => {
+            fs.rename(
+              path.join(src, file),
+              path.join(dest, file[0].toUpperCase(), file),
+              (err) => {
+                if (err) console.error(err);
+              }
+            );
+          };
+          let copy = () => {
+            fs.copyFile(path.join(src, file), path.join(dest, file[0].toUpperCase(), file), (err) => {
+              if (err) console.error(err)
+            });
+          }
+          createFolder(path.join(dest, file[0].toUpperCase()));
+          isDeleteNeeded ? rename() : copy();
+        }
+        if (len === 0) countDir--;
+      });
+    });
+    if (len === 0) countDir--;
+  });
 }
 
-createFolder(dest)
-readFolder(src)
-
-
-
-
-// const interval = setInterval(() => {
-// 	if (len === 0) {
-// 		createFolder(dest)
-// 		clearInterval(interval)
-// 	}
-// }, 0)
-
-
+createFolder(dest);
+readFolder(src);
 
 const interval = setInterval(() => {
-	if (len !== 0) {
-		console.log(data)
-		// fs.rmdir(src)
-		clearInterval(interval)
-	}
-}, 1000)
-
-
-
-// let copy = (src, dest, file) => {
-// 	fs.copyFile(path.join(src, file), path.join(dest, file), (err) => {
-// 		if (err) {
-// 			console.error(err)
-// 			return
-// 		}
-// 		console.log('Файл скопирован');
-// 	});
-// }
+  if (countDir === 0) {
+    isDeleteNeeded ? del(src) : null;
+    console.log('== Сортировка завершена! ==');
+    clearInterval(interval);
+  }
+}, 1000);
