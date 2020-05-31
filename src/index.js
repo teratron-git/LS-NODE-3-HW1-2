@@ -2,17 +2,17 @@ const fs = require('fs');
 const path = require('path');
 const del = require('del');
 
-let src = path.join(__dirname, process.argv[2] || 'DATA');
-let dest = path.join(__dirname, process.argv[3] || 'SORTED');
-let isDeleteNeeded = process.argv[4] || false;
+const src = path.join(__dirname, process.argv[2] || 'DATA');
+const dest = path.join(__dirname, process.argv[3] || 'SORTED');
+const isDeleteNeeded = process.argv[4] || false;
+const data = [];
 let countDir = 0;
-let data = [];
 
 console.log('Исходная папка:', src);
 console.log('Конечная папка:', dest);
 console.log('Удалить исходную папку после сортировки :', isDeleteNeeded, '\n');
 
-let isFile = (currentFile, cb) => {
+const isFile = (currentFile, cb) => {
   let isCurrentFile;
   fs.stat(currentFile, (err, stats) => {
     if (err) {
@@ -41,7 +41,7 @@ function readFolder(src) {
     }
     len = files.length;
     files.map((file) => {
-      let currentFile = path.join(src, file);
+      const currentFile = path.join(src, file);
       isFile(currentFile, (err, isCurrentFile) => {
         if (err) console.log(err);
         data.push({ file, isCurrentFile });
@@ -49,7 +49,7 @@ function readFolder(src) {
         if (!isCurrentFile) {
           readFolder(path.join(src, file));
         } else {
-          let rename = () => {
+          const rename = () => {
             fs.rename(
               path.join(src, file),
               path.join(dest, file[0].toUpperCase(), file),
@@ -58,7 +58,7 @@ function readFolder(src) {
               }
             );
           };
-          let copy = () => {
+          const copy = () => {
             fs.copyFile(
               path.join(src, file),
               path.join(dest, file[0].toUpperCase(), file),
